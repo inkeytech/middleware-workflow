@@ -1,6 +1,6 @@
 {
   "name": "workflow-middleware",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Extensible self-documenting workflow middleware for Node.js microservices",
   "main": "index.js",
   "scripts": {
