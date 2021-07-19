@@ -1,7 +1,7 @@
 {
   "name": "workflow-middleware",
   "version": "1.0.0",
-  "description": "Slightly opinionated self-documenting workflow middleware for Node.js microservices",
+  "description": "Extensible self-documenting workflow middleware for Node.js microservices",
   "main": "index.js",
   "scripts": {
     "test": "mocha"
@@ -15,7 +15,8 @@
     "self-documenting",
     "workflow",
     "middleware",
-    "microservices"
+    "microservices",
+    "extensible"
   ],
   "author": "Ian Watson",
   "license": "MIT",
