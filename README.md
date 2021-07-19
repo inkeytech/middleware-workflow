@@ -1,2 +1,2 @@
 # workflow-middleware
-Slightly opinionated self-documenting workflow middleware for Node.js microservices
+Extensible self-documenting workflow middleware for Node.js microservices
