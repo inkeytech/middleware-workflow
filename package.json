@@ -1,0 +1,26 @@
+{
+  "name": "workflow-middleware",
+  "version": "1.0.0",
+  "description": "Slightly opinionated self-documenting workflow middleware for Node.js microservices",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/inkeytech/workflow-middleware.git"
+  },
+  "keywords": [
+    "opinionated",
+    "self-documenting",
+    "workflow",
+    "middleware",
+    "microservices"
+  ],
+  "author": "Ian Watson",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/inkeytech/workflow-middleware/issues"
+  },
+  "homepage": "https://github.com/inkeytech/workflow-middleware#readme"
+}
