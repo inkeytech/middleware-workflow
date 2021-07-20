@@ -1,10 +1,6 @@
 //Includes------------------------------------------------------------------------------------------------------
-// var extend = require('extend');
 var _ = require('lodash');
-// var moment = require('moment-timezone');
 var async = require('async');
-// const axios = require('axios');
-// const url = require('url');
 var pjson = require('./package.json');
 // --------------------------------------------------------------------------------------------------
 
@@ -24,24 +20,53 @@ const defDefshema = {
 };
 
 
-
-var fnMutate3 = function(meta, next){
+var fnTriggerValidator = function(triggerData, next, exit){
 	try {
-		meta.input.parameters.ruler = 'Ian the Fucking Great';
-		next();
+		if (triggerData.apikey){
+			exit('NO API KEY IN TRIGGER DATA'); //GRACEFUL EXIT PAYLOAD
+		}
+		next(); // NO PAYLOAD SHOULD BE PROVIDED OR PROCESSED BY HANDLER
 	} catch(err){
-		next(err);
+		exit(err); //error Exit
 	}
 };
 
-var triggerFunction = function(triggerData, meta, next){
+var fnTriggerActor = function(triggerData, meta, next){
 	try {
 		meta.input.parameters.ruler = 'Ian the Fucking Great';
+		next('TRIGGER DATA PROCESSED'); //PAYLOAD SUGGESTED BUT OPTIONAL
+	} catch(err){
+		next(err); //ERROR PAYLOAD
+	}
+};
+
+var triggerAction = {validator: fnTriggerValidator, actor: fnTriggerActor};
+
+var fnValidator = function(meta, next, exit){
+	try {
+		if (meta.user.userId){
+			exit('USER NOT AUTHENTICATED');
+		}
 		next();
 	} catch(err){
-		next(err);
+		exit(err);
 	}
-}
+};
+
+var fnActor= function(meta, next, exit){
+	try {
+		if (!meta.user.userid){
+			exit('NOT AUTHENTICATED');
+		}
+		meta.user = 
+		
+		next('USER DATA SET');
+	} catch(err){
+		exit(err);
+	}
+};
+
+var setUserAction = {validator: fnValidator, actor: fnActor};
 
 
 
@@ -64,20 +89,20 @@ module.exports = function(schema = defDefshema, fnTriggerMapper, moduleOptions){
 // ------------------------     BASE FUNCTIONS ------------------------------------
 
 
-function fnMiddleware(triggerObject, arMiddleware){
+function fnMiddleware(triggerObject, arActions){
 	var ctx = {
 		meta: glOptions.schema,
 		outputs: []
 	};
 	
-	var fnPrmTrigger = wrapTriggerFunction(triggerObject, glOptions.fnTriggerMapper);
-	var arPrmFunctions = [];
-	arMiddleware.forEach(function(fnMiddleware){
-		arPrmFunctions.push(wrapFunction(fnMiddleware));
+		var arPrmFunctions = [];
+	arActions.forEach(function(oAction){
+		arPrmFunctions.push(wrapValidator(oAction.validator));
+		arPrmFunctions.push(wrapActor(oAction.actor));
 	});
 	
 	
-	fnPrmTrigger(triggerObject, ctx.meta)
+	processTriggerAction(triggerObject, glOptions.triggerAction)
 	.then(function(meta){
 		ctx.meta = meta;
 		return new Promise(function(fulfill, reject){
@@ -98,10 +123,66 @@ function fnMiddleware(triggerObject, arMiddleware){
 		});
 	});
 
+
+	function processTriggerAction(triggerObject, triggerAction){
+		var fnPrmTriggerValidator = wrapTriggerValidator(triggerObject, triggerAction.validator);
+		var fnPrmTriggerActor = wrapTriggerActor(triggerObject, triggerAction.actor);
+		return new Promise(function(fulfill, reject){
+			fnPrmTriggerValidator
+			.then(function(validatorResult){
+				fnPrmTriggerActor
+				.then(function(meta){
+					fulfill(meta);
+				})
+				.catch(function(err){
+					reject(err);
+				});
+			})
+			.catch(function(err){
+				reject(err);
+			});
+		});
+	}
+
+	function wrapTriggerValidator(triggerObject, fnIn){
+		return function(meta){
+			return new Promise(function(fulfill, reject){
+				function fnNext(err){
+					if (err){
+						reject(err);
+					}
+					fulfill(meta);
+				}
+				
+				try {
+					fnIn(triggerObject, meta, fnNext);
+				} catch(err){
+					reject(err);
+				}
+			}); 
+		}; 
+	}
 	
+	function wrapTriggerActor(triggerObject, fnIn){
+		return function(meta){
+			return new Promise(function(fulfill, reject){
+				function fnNext(err){
+					if (err){
+						reject(err);
+					}
+					fulfill(meta);
+				}
+				
+				try {
+					fnIn(triggerObject, meta, fnNext);
+				} catch(err){
+					reject(err);
+				}
+			}); 
+		}; 
+	}
 	
-	
-	function wrapFunction(fnIn){
+	function wrapValidator(fnIn){
 		return function(meta){
 			return new Promise(function(fulfill, reject){
 				function fnNext(err){
@@ -120,7 +201,8 @@ function fnMiddleware(triggerObject, arMiddleware){
 		}; 
 	}
 	
-	function wrapTriggerFunction(triggerObject, mapperFunction){
+	
+	function wrapActor(fnIn){
 		return function(meta){
 			return new Promise(function(fulfill, reject){
 				function fnNext(err){
@@ -129,14 +211,17 @@ function fnMiddleware(triggerObject, arMiddleware){
 					}
 					fulfill(meta);
 				}
+				
 				try {
-					mapperFunction(triggerObject, meta, fnNext);
+					fnIn(meta, fnNext);
 				} catch(err){
 					reject(err);
 				}
 			}); 
 		}; 
 	}
+	
+	
 }
 
 
